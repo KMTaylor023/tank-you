@@ -2,7 +2,8 @@ const xxh = require('xxhashjs');
 
 const Tank = require('./Tank.js');
 const hostRelay = require('./hostRelay.js');
-var io;
+
+let io;
 
 const MAX_ROOM_SIZE = 4;
 
@@ -14,9 +15,7 @@ const players = {};
 +++++++++++++++++++++++++++++++++++++++++ Socket message helper functions
 */
 
-const doHash = (data) => {
-  return xxh.h32(`${data}${new Date().getTime()}`, 0xCAFEBABE).toString(16);
-};
+const doHash = data => xxh.h32(`${data}${new Date().getTime()}`, 0xCAFEBABE).toString(16);
 
 const socketErr = (socket, msg) => {
   socket.emit('err', { msg });
@@ -24,10 +23,10 @@ const socketErr = (socket, msg) => {
 
 const defaultSocket = (sock) => {
   const socket = sock;
-  
+
   socket.host = false;
   socket.hostSocket = undefined;
-}
+};
 
 const enterLobby = (sock) => {
   const socket = sock;
@@ -47,9 +46,9 @@ const updateLobby = (room) => {
 const joinRoom = (sock, roomName) => {
   const socket = sock;
 
-  //already in a room, couldn't have gotten here the correct way
+  // already in a room, couldn't have gotten here the correct way
   if (socket.roomString) {
-    return;
+    return socketErr(socket, 'Already in room');
   }
 
   if (!rooms[roomName]) {
@@ -59,27 +58,28 @@ const joinRoom = (sock, roomName) => {
   if (rooms[roomName].running || rooms[roomName].over) {
     return socketErr(socket, 'Game in progress');
   }
-  
-  if (rooms[roomName].players.length >= MAX_ROOM_SIZE){
+
+  if (rooms[roomName].players.length >= MAX_ROOM_SIZE) {
     return socketErr(socket, 'Room is full');
   }
-  
+
   const room = rooms[roomName];
-  
+
   socket.join(roomName);
   socket.roomString = roomName;
-  
-  if (room.players.length === 0){
+
+  const tank = new Tank(socket.hash);
+
+  if (room.players.length === 0) {
     hostRelay.confirmHost(socket, room);
-  }
-  else{
+  } else {
     socket.hostSocket = room.hostSocket;
-    room.hostSocket.emit('playerJoined', socket.hash);
+    room.hostSocket.emit('playerJoined', tank);
   }
-  
-  
+
+
   room.players.push(socket.hash);
-  updateLobby(roomName);
+  return updateLobby(roomName);
 };
 
 
@@ -91,17 +91,17 @@ const leaveRoom = (sock) => {
   }
 
   const s = socket.roomString;
-  
-  if(rooms[s]){
+
+  if (rooms[s]) {
     const room = rooms[s];
-  
+
     room.players.splice(room.players.indexOf(socket.hash));
-  
+
     socket.broadcast.to(socket.roomString).emit('left', { hash: socket.hash });
-  
-    //TODO swap to a new host?
-    if(room.players.length !== 0 && socket.host){
-      socket.broadcast.to(socket.roomString).emit('host_left',{});
+
+    // TODO swap to a new host?
+    if (room.players.length !== 0 && socket.host) {
+      socket.broadcast.to(socket.roomString).emit('host_left', {});
       room.players = [];
     }
     updateLobby(s);
@@ -121,11 +121,11 @@ const leaveRoom = (sock) => {
 */
 
 // creates a room for a socket
-const onCreate = (sock) => {
+const onCreateRoom = (sock) => {
   const socket = sock;
 
   socket.on('createRoom', (data) => {
-    const room = data.room
+    const { room } = data;
     if (!room || socket.roomString) {
       return;// no error message, had to cheat to get here
     }
@@ -141,29 +141,31 @@ const onCreate = (sock) => {
   });
 };
 
-//sets up all messages to host sockets
-const onMessageToHost = (sock) => {
-  
-  //validates that the socket with data should be relayed to host
-  const validSocketToRelay = (socket, data) => {
-    if(!socket.roomString || socket.host) return false;
-    if(!data || !data.hash || data.hash !== socket.hash) return false;
+// sets up all messages to host sockets
+const onMessageToHost = (socket) => {
+  // validates that the socket with data should be relayed to host
+  const validSocketToRelay = (data) => {
+    if (!socket.roomString || socket.host) return false;
+    if (!data || !data.hash || data.hash !== socket.hash) return false;
     return true;
   };
-  
-  //list of all messages that may relay
-  const messagesToHost = ['shoot','move'];
-  
-  //set each message to relay to host if valid
-  for(let i = 0; i < messagesToHost.length; i++){
-    const m = messagesToHost[i];
-    socket.on(m, (data) => {
-      if(!validSocketToRelay(socket, data)) return;
-      
-      socket.hostSocket.emit(m, data);
+
+  const relayMessage = (msg) => {
+    socket.on(msg, (data) => {
+      if (!validSocketToRelay(data)) return;
+
+      socket.hostSocket.emit(msg, data);
     });
+  };
+
+  // list of all messages that may relay
+  const messagesToHost = ['shoot', 'move'];
+
+  // set each message to relay to host if valid
+  for (let i = 0; i < messagesToHost.length; i++) {
+    relayMessage(messagesToHost[i]);
   }
-}
+};
 
 const onDisconnect = (sock) => {
   const socket = sock;
@@ -178,17 +180,17 @@ const onDisconnect = (sock) => {
 
 const onJoinRoom = (sock) => {
   const socket = sock;
-  
+
   socket.on('join', (data) => {
     if (!data || !data.room) {
       return socketErr(socket, 'No room name given');
     }
-    
+
     return joinRoom(socket, data.room);
   });
 };
 
-const onLeave = (sock) => {
+const onLeaveRoom = (sock) => {
   const socket = sock;
 
   socket.on('leave', () => {
@@ -207,26 +209,26 @@ const onLeave = (sock) => {
 
 const setup = (server) => {
   io = server;
-  
+
   io.on('connection', (sock) => {
     const socket = sock;
-    
+
     const hash = doHash(socket.id);
     socket.hash = hash;
-    
+
     players[socket.hash] = socket;
-    
+
     defaultSocket(socket);
-    
+
     enterLobby(socket);
-    
-    
-    
+
+
     onMessageToHost(socket);
+    onCreateRoom(socket);
     onJoinRoom(socket);
     onLeaveRoom(socket);
     onDisconnect(socket);
   });
-}
+};
 
 module.exports.setup = setup;
