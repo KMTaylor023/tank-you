@@ -31,7 +31,7 @@ const defaultSocket = (sock) => {
 const enterLobby = (sock) => {
   const socket = sock;
 
-  socket.emit('lobby', rooms);
+  socket.emit('updateLobby', rooms);
 
   socket.join('lobby');
 };
@@ -59,7 +59,7 @@ const joinRoom = (sock, roomName) => {
     return socketErr(socket, 'Game in progress');
   }
 
-  if (rooms[roomName].players.length >= MAX_ROOM_SIZE) {
+  if (rooms[roomName].full) {
     return socketErr(socket, 'Room is full');
   }
 
@@ -71,7 +71,7 @@ const joinRoom = (sock, roomName) => {
   const tank = new Tank(socket.hash);
 
   if (room.players.length === 0) {
-    hostRelay.confirmHost(socket, room);
+    hostRelay.confirmHost(socket, room, updateLobby);
   } else {
     socket.hostSocket = room.hostSocket;
     room.hostSocket.emit('playerJoined', tank);
@@ -79,6 +79,11 @@ const joinRoom = (sock, roomName) => {
 
 
   room.players.push(socket.hash);
+  
+  if(room.players.length === MAX_ROOM_SIZE){
+    room.full = true;
+  }
+  
   return updateLobby(roomName);
 };
 
@@ -96,6 +101,7 @@ const leaveRoom = (sock) => {
     const room = rooms[s];
 
     room.players.splice(room.players.indexOf(socket.hash));
+    room.full = false;
 
     socket.broadcast.to(socket.roomString).emit('left', { hash: socket.hash });
 
@@ -135,7 +141,7 @@ const onCreateRoom = (sock) => {
       return;
     }
 
-    rooms[room] = { players: [], running: false, over: false };
+    rooms[room] = { players: [], running: false, over: false, full:false};
 
     joinRoom(socket, room);
   });

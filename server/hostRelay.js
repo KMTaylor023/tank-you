@@ -1,4 +1,4 @@
-const confirmHost = (sock, rm) => {
+const confirmHost = (sock, rm, update) => {
   const room = rm;
   const socket = sock;
 
@@ -6,6 +6,7 @@ const confirmHost = (sock, rm) => {
   socket.hostSocket = socket;
   room.hostSocket = socket;
 
+  //TODO add last update to all?????//////////////////////////////////////////////
   socket.on('hostMove', (data) => {
     socket.broadcast.to(socket.roomString).emit('updatedMovement', data);
   });
@@ -22,11 +23,29 @@ const confirmHost = (sock, rm) => {
 
   socket.on('gameStart', () => {
     room.started = true;
+    update(room);
+    
+    socket.broadcast.to(socket.roomString).emit('startGame', {});
   });
 
-  socket.on('gameOver', () => {
+  socket.on('gameOver', (data) => {
+    if(!data || !data.winner) return;
+    
     room.started = false;
     room.over = true;
+    
+    update(room);
+    
+    socket.broadcast.to(socket.roomString).emit('gameOver', {winner: data.winner});
+  });
+  
+  socket.on('resetGame', () => {
+    if(!room.over) return;
+    room.over = false;
+    
+    update(room);
+    
+    socket.broadcast.to(socket.roomString).emit('resetGame', {});
   });
 
   socket.emit('host_on');
