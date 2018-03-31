@@ -1,5 +1,5 @@
 /*
-+++++++++++++++++++++++++++++++++++++++++ Socket emission
++++++++++++++++++++++++++++++++++++++++++ Client Socket emission
 */
 
 const joinRoom = (room) => {
@@ -10,12 +10,19 @@ const joinRoom = (room) => {
   socket.emit('join', room);
 }
 
+const sendShot = () => {
+  if (players[player_hash].shot) return;
+  
+  players[player_hash].shot = true;
+  scoket.emit('shoot', players[player_hash]);
+};
+
 /*
------------------------------------------ Socket emission
+----------------------------------------- Client Socket emission
 */
 
 /*
-+++++++++++++++++++++++++++++++++++++++++ Socket reception
++++++++++++++++++++++++++++++++++++++++++ Client Socket reception
 */
 const onMove = (sock) => {
   const socket = sock;
@@ -69,6 +76,17 @@ const onLobby = (sock) => {
   });
 };
 
+
+const onErr = (sock) => {
+  const socket = sock;
+  
+  socket.on('err', (data) => {
+    deleteGame();
+    enterLobby();
+    if(data && data.msg) showErr(data.msg);
+  })
+}
+
 /*
------------------------------------------ Socket reception
+----------------------------------------- Client Socket reception
 */

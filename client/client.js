@@ -3,6 +3,9 @@ var player_hash = 0;
 
 var socket = {};
 
+var canvas;
+var ctx;
+
 const LEFT = 0;
 const UP = 1;
 const RIGHT = 2;
@@ -22,8 +25,12 @@ var gameSection = {};
 var lobbySection = {};
 var loadingSection = {};
 
+var errorMessage = {};
 
-// +++++++ Key handlers deal with setting player direction when game is running
+var mousePositionTimer = {};
+
+
+// +++++++ the handler functions
 const keyDownHandler = (e) => {
   if(gameState !== RUNNING_STATE) return;
   const keyPressed = e.which;
@@ -60,6 +67,34 @@ const keyUpHandler = (e) => {
     move[RIGHT] = false;
   }
 };
+
+const calculateMouseAngle = (e) => {
+  let rect = canvas.getBoundingClientRect();
+  const mouse = {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    };
+  
+  players[player_hash].gunAngle = Math.atan2(
+          mouse.y - players[player_hash].y, 
+          mouse.x - players[player_hash].x);
+}
+//TODO is this too much math too often? slow down sample rate??
+const mouseMoveHandler = (e) => {
+  if(gameState !== RUNNING_STATE) return;
+  
+  calculateMouseAngle(e);
+};
+
+const mouseClickHandler = (e) => {
+  if(gameState !== RUNNING_STATE || players[player_hash].shot) return;
+  
+  calculateMouseAngle(e);
+  sendShot();
+  
+}
+
+
 // -------
 
 const updateGameState = (state) => {
@@ -85,9 +120,14 @@ const updateGameState = (state) => {
   }
 }
 
+const showError = (msg) => {
+  errorMessage.querySelector('#error_text').innerHTML = msg;
+  errorMessage.style.display = 'block';
+}
+
 // resets the current game state to waiting
 const resetGame = () => {
-  
+  updateGameState(WAITING_STATE);
 };
 
 const startGame = () => {
@@ -103,20 +143,38 @@ const endGame = (winner) => {
   //TODO winner
 };
 
+const deleteGame = () => {
+  
+};
 
 // exists the game, removes all game state vars
 const exitGame = () => {
   
+  deleteGame();
 };
 
 const enterLobby = () => {
-  
+  updateGameState(LOBBY_STATE);
 }
 
 
+const loadElements = () => {
+  gameSection = document.querySelector('#game')
+  loadingSection = document.querySelector('#loading');
+  lobbySection = document.querySelector('#lobby');
+  errorMessage = document.querySelector('#error');
+  
+  errorMessage.querySelector('#error_button').addEventListener('click', (e) => {
+    e.preventDefault();
+    errorMessage.style.display = "none";
+    return false;
+  });
+}
+
 // sets up initial app state
 const init = () => {
-  initializeLobby();
+  loadElements();//load constantly reference elements
+  initializeLobby();//initialize lobby elements
   
   const canvas = document.querySelector('canvas');
   canvas.width = 510;
@@ -135,6 +193,8 @@ const init = () => {
 
   document.body.addEventListener('keydown', keyDownHandler);
   document.body.addEventListener('keyup', keyUpHandler);
+  
+  enterLobby();
 };
 
 window.onload = init;
