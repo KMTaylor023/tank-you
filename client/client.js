@@ -1,10 +1,14 @@
 const players = {};
+const bullets = {};
 var player_hash = 0;
 
 var socket = {};
 
 var canvas;
 var ctx;
+
+const CANVAS_WIDTH = 500;
+const CANVAS_HEIGHT = 500;
 
 const LEFT = 0;
 const UP = 1;
@@ -90,7 +94,20 @@ const mouseClickHandler = (e) => {
   if(gameState !== RUNNING_STATE || players[player_hash].shot) return;
   
   calculateMouseAngle(e);
-  sendShot();
+  
+  const px = players[player_hash].x;
+  const py = players[player_hash].y;
+  const bullet = {
+    hash: player_hash,
+    x: px,
+    y: py,
+    prevX: px,
+    prevY: py,
+    destX: px,
+    destY: py,
+    angle: players[player_hash].gunAngle,
+  }
+  sendShot(bullet);
   
 }
 
@@ -177,8 +194,8 @@ const init = () => {
   initializeLobby();//initialize lobby elements
   
   const canvas = document.querySelector('canvas');
-  canvas.width = 510;
-  canvas.height = 510;
+  canvas.width = CANVAS_WIDTH;
+  canvas.height = CANVAS_HEIGHT;
   canvas.style.border = '1px solid blue';
   
 

@@ -13,6 +13,7 @@ class Tank {
     this.radius = 50;
     
     //Tank Specific things
+    this.alive = true;
     this.gunAngle = 0;
     this.shot = false;
     

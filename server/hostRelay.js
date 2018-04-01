@@ -14,6 +14,10 @@ const confirmHost = (sock, rm, update) => {
   socket.on('hostHit', (data) => {
     socket.broadcast.to(socket.roomString).emit('hit', data);
   });
+  
+  socket.on('hostShot', (data) => {
+    socket.broadcast.to(socket.roomString).emit('updateBullet', data);
+  }
 
   // a new player joined. Update everyone on current players
   // include hash of new player

@@ -10,11 +10,14 @@ const joinRoom = (room) => {
   socket.emit('join', room);
 }
 
-const sendShot = () => {
+const sendShot = (bullet) => {
   if (players[player_hash].shot) return;
   
-  players[player_hash].shot = true;
-  scoket.emit('shoot', players[player_hash]);
+  if(isHost) {
+    addBullet(bullet);
+  } else {
+    socket.emit('shoot', {player: players[player_hash], bullet});
+  }
 };
 
 /*
@@ -32,11 +35,33 @@ const onMove = (sock) => {
   });
 };
 
+const onShot = (sock) => {
+  const socket = sock;
+  
+  socket.on('updateShot' = (data) => {
+    if(data.hash === player_hash){
+      players[player_hash].shot = true;
+    }
+    updateBullet(data);
+  })
+};
+
+onShotRemoved = (sock) => {
+  const socket = sock;
+  
+  socket.on('shotRemoved', (data) => {
+    if(data.hash === player_hash){
+      players[player_hash].shot = false;
+    }
+    removeBullet(data);
+  })
+}
+
 const onHit = (sock) => {
   const socket = sock;
   
   socket.on('hit', (data) => {
-    
+    killPlayer(data);
   });
 };
 

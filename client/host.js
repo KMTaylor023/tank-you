@@ -8,12 +8,29 @@ const setHostListen = (hosting, sock) => {
     });
     
     socket.on('shoot', (data) => {
-      if(!data || !)
+      if(!data || !data.hash) return;
+      
+      if(!players[data.hash] || players[data.hash].shot) return;
+      
+      addBullet(data);
+      
     });
   } else {
     socket.off('move');
     socket.off('shoot');
   }
+}
+
+const addBullet = (bull) => {
+  const bullet = bull;
+  bullet.radius = 10;
+  bullets[bullet.hash] = bullet;
+  socket.emit('hostShot',bullet);
+}
+
+const removeBullet = (bullet) => {
+  delete[bullet.hash];
+  socket.emit('removeBullet', bullet);
 }
 
 const doMovement = (data) => {
