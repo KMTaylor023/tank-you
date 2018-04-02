@@ -2,6 +2,7 @@ var isHost = false;
 
 const playerOrder = [];
 
+//setes up the host controls
 const initializeHostControls = () => {
   document.querySelector('#host_start').addEventListener('click', (e) => {
     e.preventDefault();
@@ -14,6 +15,7 @@ const initializeHostControls = () => {
   });
 }
 
+//sets up the given tank in a position o nthe screen
 const setupTank = (data) => {
   const tank = data;
   const num = playerOrder.length;
@@ -49,6 +51,7 @@ const setupTank = (data) => {
   return tank;
 };
 
+//removes the player from the hosts special list
 const removePlayerFromHost = (hash) => {
   if(!isHost) return;
   
@@ -62,6 +65,7 @@ const removePlayerFromHost = (hash) => {
   socket.emit('playerJoined', players);
 }
 
+//sets the socket to listen for host specific messages
 const setHostListen = (hosting, tank) => {
   isHost = hosting;
   setViewHostControl(hosting);
@@ -98,16 +102,19 @@ const setHostListen = (hosting, tank) => {
   }
 };
 
+//ends game with hash as winner
 const gameOver = (hash) => {
   socket.emit('gameOver', {winner: hash});
   console.log(hash);
   endGame(hash);
 }
 
+//sends all the bullets
 const sendBulletUpdates = () => {
   socket.emit('hostShots', bullets);
 }
 
+//adds a bullet
 const addBullet = (bull) => {
   const bullet = bull;
   bullet.radius = 10;
@@ -115,23 +122,25 @@ const addBullet = (bull) => {
   players[bullet.hash].shot = true;
 };
 
+//removes a bullet
 const hostRemoveBullet = (bullet) => {
   removeBullet(bullet);
   socket.emit('removeBullet', bullet);
 };
 
+//updates movement with data
 const doMovement = (data) => {
   if(!isHost) return;
   socket.emit('hostMove',data);
 };
 
-
-
+//does a hit
 const doHit = (data) => {
   if(!isHost) return;
   socket.emit('hostHit', data);
 };
 
+//adds a player to the game
 const doPlayerJoin = (data) => {
   if(!isHost) return;
   const tank = setupTank(data);

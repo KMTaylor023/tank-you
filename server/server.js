@@ -11,6 +11,7 @@ const index = fs.readFileSync(`${__dirname}/../hosted/index.html`);
 const bundle = fs.readFileSync(`${__dirname}/../hosted/bundle.js`);
 const style = fs.readFileSync(`${__dirname}/../hosted/style.css`);
 
+// handles pushing the files to the users
 const onRequest = (request, response) => {
   const parsedURL = url.parse(request.url);
 

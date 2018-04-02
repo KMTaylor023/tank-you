@@ -1,3 +1,5 @@
+//note to future keegan, too much global scope maybe
+
 const players = {};
 const bullets = {};
 var player_hash = 0;
@@ -116,6 +118,7 @@ const mouseClickHandler = (e) => {
 
 // -------
 
+//sets the host control viewing abilities
 const setViewHostControl = (hosting) => {
   let view = 'block';
   if(!hosting) view = 'none';
@@ -123,6 +126,7 @@ const setViewHostControl = (hosting) => {
   document.querySelector('#host_controls').style.display = view;
 };
 
+//updates the current state of the game, and changes view
 const updateGameState = (state) => {
   if(state < 0 || state > 4) return;
   
@@ -152,12 +156,7 @@ const updateGameState = (state) => {
   }
 }
 
-
-// resets the current game state to waiting
-const resetGameState = () => {
-  updateGameState(WAITING_STATE);
-};
-
+//starts the game
 const startGame = () => {
   updateGameState(RUNNING_STATE);
 };
@@ -172,6 +171,7 @@ const endGame = (winner) => {
   updateGameState(GAMEOVER_STATE);
 };
 
+//enter into the lobby
 const enterLobby = () => {
   updateGameState(LOBBY_STATE);
 };
@@ -184,7 +184,7 @@ const exitGame = () => {
   enterLobby();
 };
 
-
+//loads some frequently used elements
 const loadElements = () => {
   gameSection = document.querySelector('#game')
   loadingSection = document.querySelector('#loading');

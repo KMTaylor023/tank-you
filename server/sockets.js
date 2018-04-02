@@ -15,12 +15,15 @@ const players = {};
 +++++++++++++++++++++++++++++++++++++++++ Socket message helper functions
 */
 
+// Creates a hash from the input
 const doHash = data => xxh.h32(`${data}${new Date().getTime()}`, 0xCAFEBABE).toString(16);
 
+// sends a socket error
 const socketErr = (socket, msg) => {
   socket.emit('err', { msg });
 };
 
+// sets the socket to default state
 const defaultSocket = (sock) => {
   const socket = sock;
 
@@ -28,6 +31,7 @@ const defaultSocket = (sock) => {
   socket.hostSocket = undefined;
 };
 
+// enters socket into lobby
 const enterLobby = (sock) => {
   const socket = sock;
 
@@ -36,6 +40,7 @@ const enterLobby = (sock) => {
   socket.join('lobby');
 };
 
+// updates lobby
 const updateLobby = (room) => {
   const rdata = {};
   rdata[room.roomName] = room;
@@ -46,6 +51,7 @@ const updateLobby = (room) => {
   }
 };
 
+// adds player to given room
 const joinRoom = (sock, roomName) => {
   const socket = sock;
 
@@ -91,7 +97,7 @@ const joinRoom = (sock, roomName) => {
   return updateLobby(room);
 };
 
-
+// removes player from current room
 const leaveRoom = (sock) => {
   const socket = sock;
   if (!socket.roomString) {
@@ -175,6 +181,7 @@ const onMessageToHost = (socket) => {
   }
 };
 
+// on socket disconnect
 const onDisconnect = (sock) => {
   const socket = sock;
 
@@ -186,6 +193,7 @@ const onDisconnect = (sock) => {
   });
 };
 
+// on socket join room
 const onJoinRoom = (sock) => {
   const socket = sock;
 
@@ -198,6 +206,7 @@ const onJoinRoom = (sock) => {
   });
 };
 
+// on socket leave room
 const onLeaveRoom = (sock) => {
   const socket = sock;
 
@@ -214,7 +223,7 @@ const onLeaveRoom = (sock) => {
 ----------------------------------------- On event Functions
 */
 
-
+// sets up the sockets and socket related code
 const setup = (server) => {
   io = server;
 

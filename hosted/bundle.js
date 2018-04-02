@@ -1,5 +1,7 @@
 'use strict';
 
+//note to future keegan, too much global scope maybe
+
 var players = {};
 var bullets = {};
 var player_hash = 0;
@@ -114,6 +116,7 @@ var mouseClickHandler = function mouseClickHandler(e) {
 
 // -------
 
+//sets the host control viewing abilities
 var setViewHostControl = function setViewHostControl(hosting) {
   var view = 'block';
   if (!hosting) view = 'none';
@@ -121,6 +124,7 @@ var setViewHostControl = function setViewHostControl(hosting) {
   document.querySelector('#host_controls').style.display = view;
 };
 
+//updates the current state of the game, and changes view
 var updateGameState = function updateGameState(state) {
   if (state < 0 || state > 4) return;
 
@@ -149,11 +153,7 @@ var updateGameState = function updateGameState(state) {
   }
 };
 
-// resets the current game state to waiting
-var resetGameState = function resetGameState() {
-  updateGameState(WAITING_STATE);
-};
-
+//starts the game
 var startGame = function startGame() {
   updateGameState(RUNNING_STATE);
 };
@@ -167,6 +167,7 @@ var endGame = function endGame(winner) {
   updateGameState(GAMEOVER_STATE);
 };
 
+//enter into the lobby
 var enterLobby = function enterLobby() {
   updateGameState(LOBBY_STATE);
 };
@@ -179,6 +180,7 @@ var exitGame = function exitGame() {
   enterLobby();
 };
 
+//loads some frequently used elements
 var loadElements = function loadElements() {
   gameSection = document.querySelector('#game');
   loadingSection = document.querySelector('#loading');
@@ -222,6 +224,7 @@ var init = function init() {
 window.onload = init;
 "use strict";
 
+//checks collisions between two spheres
 var checkCollisions = function checkCollisions(c1, c2) {
   var dist = Math.pow(c1.x - c2.x, 2) + Math.pow(c1.y - c2.y, 2);
   if (dist <= Math.pow(c1.radius - c2.radius, 2)) {
@@ -230,6 +233,7 @@ var checkCollisions = function checkCollisions(c1, c2) {
   return false;
 };
 
+//checks if bullets left game
 var bulletOutBounds = function bulletOutBounds(bullet) {
   if (bullet.x + bullet.radius >= CANVAS_WIDTH || bullet.x - bullet.radius <= 0 || bullet.y + bullet.radius >= CANVAS_HEIGHT || bullet.y - bullet.radius <= 0) {
     return true;
@@ -237,6 +241,7 @@ var bulletOutBounds = function bulletOutBounds(bullet) {
   return false;
 };
 
+//checks for bullet collisions
 var checkBullets_collision = function checkBullets_collision() {
   var pkeys = Object.keys(players);
   var bkeys = Object.keys(bullets);
@@ -278,6 +283,7 @@ var ctx;
 var CANVAS_WIDTH = 500;
 var CANVAS_HEIGHT = 500;
 
+//starts off the canvas
 var initializeCanvas = function initializeCanvas() {
   canvas = document.querySelector('canvas');
   canvas.width = CANVAS_WIDTH;
@@ -287,19 +293,23 @@ var initializeCanvas = function initializeCanvas() {
   ctx = canvas.getContext('2d');
 };
 
+//lerps from v0 to v1 by alpha
 var lerp = function lerp(v0, v1, alpha) {
   return (1 - alpha) * v0 + alpha * v1;
 };
 
+//starts drawing
 var startDraw = function startDraw() {
   animationID = requestAnimationFrame(redraw);
 };
 
+//stops drawing
 var stopDraw = function stopDraw() {
   if (animationID === 0) return;
   cancelAnimationFrame(animationID);
 };
 
+//does all drawing of canvas
 var redraw = function redraw(time) {
   if (gameState === RUNNING_STATE) {
     updatePosition();
@@ -395,6 +405,7 @@ var isHost = false;
 
 var playerOrder = [];
 
+//setes up the host controls
 var initializeHostControls = function initializeHostControls() {
   document.querySelector('#host_start').addEventListener('click', function (e) {
     e.preventDefault();
@@ -407,6 +418,7 @@ var initializeHostControls = function initializeHostControls() {
   });
 };
 
+//sets up the given tank in a position o nthe screen
 var setupTank = function setupTank(data) {
   var tank = data;
   var num = playerOrder.length;
@@ -442,6 +454,7 @@ var setupTank = function setupTank(data) {
   return tank;
 };
 
+//removes the player from the hosts special list
 var removePlayerFromHost = function removePlayerFromHost(hash) {
   if (!isHost) return;
 
@@ -455,6 +468,7 @@ var removePlayerFromHost = function removePlayerFromHost(hash) {
   socket.emit('playerJoined', players);
 };
 
+//sets the socket to listen for host specific messages
 var setHostListen = function setHostListen(hosting, tank) {
   isHost = hosting;
   setViewHostControl(hosting);
@@ -491,16 +505,19 @@ var setHostListen = function setHostListen(hosting, tank) {
   }
 };
 
+//ends game with hash as winner
 var gameOver = function gameOver(hash) {
   socket.emit('gameOver', { winner: hash });
   console.log(hash);
   endGame(hash);
 };
 
+//sends all the bullets
 var sendBulletUpdates = function sendBulletUpdates() {
   socket.emit('hostShots', bullets);
 };
 
+//adds a bullet
 var addBullet = function addBullet(bull) {
   var bullet = bull;
   bullet.radius = 10;
@@ -508,21 +525,25 @@ var addBullet = function addBullet(bull) {
   players[bullet.hash].shot = true;
 };
 
+//removes a bullet
 var hostRemoveBullet = function hostRemoveBullet(bullet) {
   removeBullet(bullet);
   socket.emit('removeBullet', bullet);
 };
 
+//updates movement with data
 var doMovement = function doMovement(data) {
   if (!isHost) return;
   socket.emit('hostMove', data);
 };
 
+//does a hit
 var doHit = function doHit(data) {
   if (!isHost) return;
   socket.emit('hostHit', data);
 };
 
+//adds a player to the game
 var doPlayerJoin = function doPlayerJoin(data) {
   if (!isHost) return;
   var tank = setupTank(data);
@@ -541,6 +562,7 @@ var roomStatus = [['room open!', 'room_open'], ['room full!', 'room_full'], ['ga
 var lobbyList = {};
 var noRoomsNotification = {};
 
+//initializes everything required for the lobby
 var initializeLobby = function initializeLobby() {
   lobbyList = document.querySelector("#lobby_list");
   noRoomsNotification = document.querySelector('#no_rooms');
@@ -557,6 +579,7 @@ var initializeLobby = function initializeLobby() {
   });
 };
 
+//initializes a room
 var initRoom = function initRoom(name) {
   var li = document.createElement('li');
 
@@ -577,6 +600,7 @@ var initRoom = function initRoom(name) {
   return li;
 };
 
+//when the room li is clikced
 var roomClick = function roomClick(roomli) {
   var li = roomli;
 
@@ -593,6 +617,7 @@ var roomClick = function roomClick(roomli) {
   });
 };
 
+//sets up a room with the given data
 var setupRoom = function setupRoom(roomli, name, count, status) {
   var li = roomli;
   li.querySelector('.room_name').innerHTML = name;
@@ -606,6 +631,7 @@ var setupRoom = function setupRoom(roomli, name, count, status) {
   li.id = 'lobby_room_' + name;
 };
 
+//updates the lobby, adds, removes, edits rooms
 var manageLobby = function manageLobby(data) {
   var keys = Object.keys(data);
 
@@ -665,7 +691,7 @@ var manageLobby = function manageLobby(data) {
 /*
 +++++++++++++++++++++++++++++++++++++++++ Client Socket emission
 */
-
+//trys to join a room
 var joinRoom = function joinRoom(room) {
   if (!room) return;
 
@@ -675,15 +701,18 @@ var joinRoom = function joinRoom(room) {
   socket.emit('join', { room: room });
 };
 
+//leaves a room
 var leaveRoom = function leaveRoom() {
   socket.emit('leave', {});
 };
 
+//creates a room
 var createRoom = function createRoom(room) {
   socket.emit('createRoom', { room: room });
   updateGameState(LOADING_STATE);
 };
 
+//sends a shot
 var sendShot = function sendShot(bullet) {
   if (players[player_hash].shot) return;
 
@@ -694,6 +723,7 @@ var sendShot = function sendShot(bullet) {
   }
 };
 
+//moves the player
 var clientMove = function clientMove(player) {
   socket.emit('move', player);
 };
@@ -705,6 +735,7 @@ var clientMove = function clientMove(player) {
 /*
 +++++++++++++++++++++++++++++++++++++++++ Client Socket reception
 */
+//movement happened ooo
 var onMove = function onMove(sock) {
   var socket = sock;
 
@@ -713,14 +744,7 @@ var onMove = function onMove(sock) {
   });
 };
 
-var onShot = function onShot(sock) {
-  var socket = sock;
-
-  socket.on('updateBullets', function (data) {
-    updateBullets_update(data);
-  });
-};
-
+//a bullet has been removed
 var onRemoveBullet = function onRemoveBullet(sock) {
   var socket = sock;
 
@@ -732,6 +756,7 @@ var onRemoveBullet = function onRemoveBullet(sock) {
   });
 };
 
+//a player has been hit
 var onHit = function onHit(sock) {
   var socket = sock;
 
@@ -740,6 +765,7 @@ var onHit = function onHit(sock) {
   });
 };
 
+//player joined
 var onPlayerJoined = function onPlayerJoined(sock) {
   var socket = sock;
 
@@ -748,6 +774,7 @@ var onPlayerJoined = function onPlayerJoined(sock) {
   });
 };
 
+//updated bullets received
 var onUpdateBullets = function onUpdateBullets(sock) {
   var socket = sock;
 
@@ -756,14 +783,7 @@ var onUpdateBullets = function onUpdateBullets(sock) {
   });
 };
 
-var onReset = function onReset(sock) {
-  var socket = sock;
-
-  socket.on('resetGame', function (data) {
-    resetGame(data);
-  });
-};
-
+//game ended
 var onGameOver = function onGameOver(sock) {
   var socket = sock;
 
@@ -775,6 +795,7 @@ var onGameOver = function onGameOver(sock) {
   });
 };
 
+//do lobby update
 var onLobby = function onLobby(sock) {
   var socket = sock;
 
@@ -783,6 +804,7 @@ var onLobby = function onLobby(sock) {
   });
 };
 
+//a player left
 var onLeft = function onLeft(sock) {
   var socket = sock;
 
@@ -791,6 +813,7 @@ var onLeft = function onLeft(sock) {
   });
 };
 
+//become or stop being the host
 var onHost = function onHost(sock) {
   var socket = sock;
 
@@ -803,6 +826,7 @@ var onHost = function onHost(sock) {
   });
 };
 
+//error received
 var onErr = function onErr(sock) {
   var socket = sock;
 
@@ -812,6 +836,7 @@ var onErr = function onErr(sock) {
   });
 };
 
+//retrieves the players hash
 var onGetHash = function onGetHash(sock) {
   var socket = sock;
 
@@ -819,7 +844,7 @@ var onGetHash = function onGetHash(sock) {
     player_hash = data.hash;
   });
 };
-
+//game started
 var onStartGame = function onStartGame(sock) {
   var socket = sock;
 
@@ -828,6 +853,7 @@ var onStartGame = function onStartGame(sock) {
   });
 };
 
+//when the host leaves the game
 var onHostLeft = function onHostLeft(sock) {
   var socket = sock;
 
@@ -840,7 +866,7 @@ var onHostLeft = function onHostLeft(sock) {
 /*
 ----------------------------------------- Client Socket reception
 */
-
+//sets up socket
 var setupSocket = function setupSocket() {
   socket.on('connect', function () {
     onHostLeft(socket);
@@ -848,9 +874,7 @@ var setupSocket = function setupSocket() {
     onLeft(socket);
     onStartGame(socket);
     onMove(socket);
-    onShot(socket);
     onRemoveBullet(socket);
-    onReset(socket);
     onHit(socket);
     onPlayerJoined(socket);
     onGameOver(socket);
@@ -875,6 +899,7 @@ var directions = {
 var PLAYER_SPEED = 2;
 var BULLET_SPEED = 4;
 
+//updates a player with the new data
 var updatePlayer_update = function updatePlayer_update(player) {
   if (!players[player.hash]) {
     players[player.hash] = player;
@@ -900,6 +925,7 @@ var updatePlayer_update = function updatePlayer_update(player) {
   play.alpha = 0.05;
 };
 
+//updates bullets with new data given
 var updateBullets_update = function updateBullets_update(data) {
 
   var keys = Object.keys(data);
@@ -928,6 +954,7 @@ var updateBullets_update = function updateBullets_update(data) {
   }
 };
 
+//adds players to the game
 var addPlayers_update = function addPlayers_update(data) {
   if (gameState === LOADING_STATE) {
     updateGameState(WAITING_STATE);
@@ -939,6 +966,7 @@ var addPlayers_update = function addPlayers_update(data) {
   }
 };
 
+//checks if the game is over
 var checkGameOver_update = function checkGameOver_update() {
   var hash = 0;
   var count = 0;
@@ -956,15 +984,18 @@ var checkGameOver_update = function checkGameOver_update() {
   }
 };
 
+//removes a user
 var removeUser = function removeUser(hash) {
   if (players[hash]) delete players[hash];
   if (gameState === WAITING_STATE) removePlayerFromHost(hash);
 };
 
+//kills a player
 var killPlayer = function killPlayer(data) {
   players[data.hash].alive = false;
 };
 
+//deletes the current game
 var deleteGame = function deleteGame() {
   var keys = Object.keys(players);
 
@@ -983,23 +1014,13 @@ var deleteGame = function deleteGame() {
   }
 };
 
+//removes a bullet from the game
 var removeBullet = function removeBullet(bullet) {
   delete bullets[bullet.hash];
   players[bullet.hash].shot = false;
 };
 
-var resetGame = function resetGame(data) {
-  deleteGame();
-
-  var nkeys = Object.keys(data);
-
-  for (var i = 0; i < nkeys.length; i++) {
-    players[nkeys[i]] = data[nkeys[i]];
-  };
-
-  resetGameState();
-};
-
+//updates the player position
 var updatePosition = function updatePosition() {
   var player = players[player_hash];
 
@@ -1034,6 +1055,7 @@ var updatePosition = function updatePosition() {
   }
 };
 
+//updates the bullet position
 var updateBulletPositions = function updateBulletPositions() {
   if (!isHost) return;
 

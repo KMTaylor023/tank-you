@@ -1,3 +1,4 @@
+// creates a 'tank'. sorry excuse for a tank but se la vie
 class Tank {
   constructor(hash) {
     this.hash = hash;

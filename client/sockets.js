@@ -1,7 +1,7 @@
 /*
 +++++++++++++++++++++++++++++++++++++++++ Client Socket emission
 */
-
+//trys to join a room
 const joinRoom = (room) => {
   if(!room) return;
   
@@ -11,15 +11,18 @@ const joinRoom = (room) => {
   socket.emit('join', {room});
 };
 
+//leaves a room
 const leaveRoom = () => {
   socket.emit('leave', {});
 }
 
+//creates a room
 const createRoom = (room) => {
   socket.emit('createRoom',{room});
   updateGameState(LOADING_STATE);
 }
 
+//sends a shot
 const sendShot = (bullet) => {
   if (players[player_hash].shot) return;
   
@@ -30,6 +33,7 @@ const sendShot = (bullet) => {
   }
 };
 
+//moves the player
 const clientMove = (player) => {
   socket.emit('move', player);
 }
@@ -41,6 +45,7 @@ const clientMove = (player) => {
 /*
 +++++++++++++++++++++++++++++++++++++++++ Client Socket reception
 */
+//movement happened ooo
 const onMove = (sock) => {
   const socket = sock;
   
@@ -49,14 +54,7 @@ const onMove = (sock) => {
   });
 };
 
-const onShot = (sock) => {
-  const socket = sock;
-  
-  socket.on('updateBullets', (data) => {
-    updateBullets_update(data);
-  });
-};
-
+//a bullet has been removed
 const onRemoveBullet = (sock) => {
   const socket = sock;
   
@@ -68,6 +66,7 @@ const onRemoveBullet = (sock) => {
   });
 }
 
+//a player has been hit
 const onHit = (sock) => {
   const socket = sock;
   
@@ -76,6 +75,7 @@ const onHit = (sock) => {
   });
 };
 
+//player joined
 const onPlayerJoined = (sock) => {
   const socket = sock;
   
@@ -84,22 +84,17 @@ const onPlayerJoined = (sock) => {
   });
 };
 
+
+//updated bullets received
 const onUpdateBullets = (sock) => {
   const socket = sock;
   
   socket.on('updateBullets', (data) => {
     updateBullets_update(data);
   });
-}
-
-const onReset = (sock) => {
-  const socket = sock;
-  
-  socket.on('resetGame', (data) => {
-    resetGame(data);
-  });
 };
 
+//game ended
 const onGameOver = (sock) => {
   const socket = sock;
   
@@ -111,7 +106,7 @@ const onGameOver = (sock) => {
   });
 };
 
-
+//do lobby update
 const onLobby = (sock) => {
   const socket = sock;
   
@@ -120,6 +115,7 @@ const onLobby = (sock) => {
   });
 };
 
+//a player left
 const onLeft = (sock) => {
   const socket = sock;
   
@@ -128,6 +124,7 @@ const onLeft = (sock) => {
   });
 }
 
+//become or stop being the host
 const onHost = (sock) => {
   const socket = sock;
   
@@ -140,6 +137,7 @@ const onHost = (sock) => {
   });
 };
 
+//error received
 const onErr = (sock) => {
   const socket = sock;
   
@@ -149,6 +147,7 @@ const onErr = (sock) => {
   });
 };
 
+//retrieves the players hash
 const onGetHash = (sock) => {
   const socket = sock;
   
@@ -156,7 +155,7 @@ const onGetHash = (sock) => {
     player_hash = data.hash;
   });
 };
-
+//game started
 const onStartGame = (sock) => {
   const socket = sock;
   
@@ -165,6 +164,7 @@ const onStartGame = (sock) => {
   });
 }
 
+//when the host leaves the game
 const onHostLeft = (sock) => {
   const socket = sock;
   
@@ -177,7 +177,7 @@ const onHostLeft = (sock) => {
 /*
 ----------------------------------------- Client Socket reception
 */
-
+//sets up socket
 const setupSocket = () => {
   socket.on('connect', () => {
     onHostLeft(socket);
@@ -185,9 +185,7 @@ const setupSocket = () => {
     onLeft(socket);
     onStartGame(socket);
     onMove(socket);
-    onShot(socket);
     onRemoveBullet(socket);
-    onReset(socket);
     onHit(socket);
     onPlayerJoined(socket);
     onGameOver(socket);

@@ -12,6 +12,7 @@ const directions = {
 const PLAYER_SPEED = 2;
 const BULLET_SPEED = 4;
 
+//updates a player with the new data
 const updatePlayer_update = (player) => {
   if(!players[player.hash]){
     players[player.hash] = player;
@@ -38,6 +39,7 @@ const updatePlayer_update = (player) => {
   
 };
 
+//updates bullets with new data given
 const updateBullets_update = (data) => {
   
   const keys = Object.keys(data);
@@ -66,6 +68,8 @@ const updateBullets_update = (data) => {
   }
 };
 
+
+//adds players to the game
 const addPlayers_update = (data) => {
   if(gameState === LOADING_STATE){
     updateGameState(WAITING_STATE);
@@ -77,6 +81,7 @@ const addPlayers_update = (data) => {
   }
 };
 
+//checks if the game is over
 const checkGameOver_update = () => {
   let hash = 0;
   let count = 0;
@@ -94,16 +99,18 @@ const checkGameOver_update = () => {
   }
 }
 
+//removes a user
 const removeUser = (hash) => {
   if(players[hash]) delete players[hash];
   if(gameState === WAITING_STATE) removePlayerFromHost(hash);
 };
 
+//kills a player
 const killPlayer = (data) => {
   players[data.hash].alive = false;
 };
 
-
+//deletes the current game
 const deleteGame = () => {
   const keys = Object.keys(players);
   
@@ -123,23 +130,13 @@ const deleteGame = () => {
   }
 };
 
+//removes a bullet from the game
 const removeBullet = (bullet) => {
   delete bullets[bullet.hash];
   players[bullet.hash].shot = false;
-}
-
-const resetGame = (data) => {
-  deleteGame();
-  
-  const nkeys = Object.keys(data);
-  
-  for(let i = 0; i < nkeys.length; i++){
-    players[nkeys[i]] = data[nkeys[i]];
-  };
-  
-  resetGameState();
 };
 
+//updates the player position
 const updatePosition = () => {
   const player = players[player_hash];
 
@@ -187,7 +184,7 @@ const updatePosition = () => {
 };
 
 
-
+//updates the bullet position
 const updateBulletPositions = () => {
   if(!isHost) return;
   

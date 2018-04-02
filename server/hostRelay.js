@@ -1,3 +1,4 @@
+// sets a player up as a host
 const confirmHost = (sock, rm, tank, update) => {
   const room = rm;
   const socket = sock;
@@ -59,7 +60,7 @@ const confirmHost = (sock, rm, tank, update) => {
   socket.emit('hostOn', tank);
 };
 
-
+// tells the player they are no longer a host
 const removeHost = (sock) => {
   const socket = sock;
 

@@ -6,7 +6,7 @@ var ctx;
 const CANVAS_WIDTH = 500;
 const CANVAS_HEIGHT = 500;
 
-
+//starts off the canvas
 const initializeCanvas = () => {
   canvas = document.querySelector('canvas');
   canvas.width = CANVAS_WIDTH;
@@ -16,19 +16,23 @@ const initializeCanvas = () => {
   ctx = canvas.getContext('2d');
 }
 
+//lerps from v0 to v1 by alpha
 const lerp = (v0, v1, alpha) => {
   return (1 - alpha) * v0 + alpha * v1;
 };
 
+//starts drawing
 const startDraw = () => {
   animationID = requestAnimationFrame(redraw);
 }
 
+//stops drawing
 const stopDraw = () => {
   if(animationID === 0) return;
   cancelAnimationFrame(animationID);
 }
 
+//does all drawing of canvas
 const redraw = (time) => {
   if(gameState === RUNNING_STATE) {
     updatePosition();

@@ -1,3 +1,4 @@
+//checks collisions between two spheres
 const checkCollisions = (c1, c2) => {
   const dist = Math.pow((c1.x - c2.x),2) + Math.pow((c1.y - c2.y),2);
   if (dist <= Math.pow((c1.radius - c2.radius),2)){
@@ -6,6 +7,7 @@ const checkCollisions = (c1, c2) => {
   return false;
 };
 
+//checks if bullets left game
 const bulletOutBounds = (bullet) => {
   if(bullet.x + bullet.radius >= CANVAS_WIDTH ||
      bullet.x - bullet.radius <= 0 ||
@@ -16,7 +18,7 @@ const bulletOutBounds = (bullet) => {
   return false;
 }
 
-
+//checks for bullet collisions
 const checkBullets_collision = () => {
   let pkeys = Object.keys(players);
   let bkeys = Object.keys(bullets);

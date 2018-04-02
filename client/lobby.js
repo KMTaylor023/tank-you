@@ -14,6 +14,7 @@ var lobbyList = {};
 var noRoomsNotification = {};
 
 
+//initializes everything required for the lobby
 const initializeLobby = () => {
   lobbyList = document.querySelector("#lobby_list");
   noRoomsNotification = document.querySelector('#no_rooms');
@@ -31,6 +32,8 @@ const initializeLobby = () => {
   
 };
 
+
+//initializes a room
 const initRoom = (name) => {
   const li = document.createElement('li');
   
@@ -51,6 +54,7 @@ const initRoom = (name) => {
   return li;
 };
 
+//when the room li is clikced
 const roomClick = (roomli) => {
   const li = roomli;
   
@@ -67,7 +71,7 @@ const roomClick = (roomli) => {
   });
 }
 
-
+//sets up a room with the given data
 const setupRoom = (roomli, name, count, status) => {
   const li = roomli;
   li.querySelector('.room_name').innerHTML = name;
@@ -81,6 +85,7 @@ const setupRoom = (roomli, name, count, status) => {
   li.id = `lobby_room_${name}`;
 };
 
+//updates the lobby, adds, removes, edits rooms
 const manageLobby = (data) => {
   const keys = Object.keys(data);
   
