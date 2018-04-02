@@ -143,7 +143,7 @@ const updateGameState = (state) => {
     stopDraw();
   } else {
     if(gameState === WAITING_STATE) gameMessage.innerHTML = 'Waiting for Players';
-    else if (gamesState == RUNNING_STATE) gameMessage.innerHTML = "Game On!";
+    else if (gameState == RUNNING_STATE) gameMessage.innerHTML = "Game On!";
     
     lobbySection.style.display = 'none';
     loadingSection.style.display = 'none';
