@@ -37,10 +37,10 @@ const enterLobby = (sock) => {
 };
 
 const updateLobby = (room) => {
-  let rdata = {};
+  const rdata = {};
   rdata[room.roomName] = room;
   io.to('lobby').emit('updateLobby', rdata);
-  
+
   if (room.players.length === 0) {
     delete rooms[room.roomName];
   }
@@ -67,7 +67,7 @@ const joinRoom = (sock, roomName) => {
   }
 
   const room = rooms[roomName];
-  
+
 
   socket.join(roomName);
   socket.roomString = roomName;
@@ -109,7 +109,7 @@ const leaveRoom = (sock) => {
       socket.broadcast.to(socket.roomString).emit('hostLeft', {});
       room.players = [];
     }
-    
+
     updateLobby(room);
   }
 
@@ -223,7 +223,7 @@ const setup = (server) => {
 
     const hash = doHash(socket.id);
     socket.hash = hash;
-    socket.emit('getHash', {hash});
+    socket.emit('getHash', { hash });
 
     players[socket.hash] = socket;
 

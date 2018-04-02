@@ -18,7 +18,7 @@ const confirmHost = (sock, rm, tank, update) => {
   socket.on('hostShots', (data) => {
     socket.broadcast.to(socket.roomString).emit('updateBullets', data);
   });
-  
+
   socket.on('removeBullet', (data) => {
     socket.broadcast.to(socket.roomString).emit('removeBullet', data);
   });
