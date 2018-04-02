@@ -7,7 +7,7 @@ const joinRoom = (room) => {
   
   updateGameState(LOADING_STATE);
   
-  document.querySelector('#host_start').style.display = 'none';
+  document.querySelector('#host_controls').style.display = 'none';
   socket.emit('join', {room});
 };
 

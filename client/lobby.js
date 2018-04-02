@@ -25,6 +25,7 @@ const initializeLobby = () => {
       return false;
     }
     createRoom(nameText.value);
+    nameText.value = "";
     return false;
   });
   

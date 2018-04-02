@@ -114,6 +114,10 @@ const deleteGame = () => {
   
   const bkeys = Object.keys(bullets);
   
+  while(playerOrder.length > 0){
+    playerOrder.pop();
+  }
+  
   for(let i = 0; i < bkeys.length; i++){
     delete bullets[bkeys[i]];
   }

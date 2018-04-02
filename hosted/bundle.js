@@ -565,6 +565,7 @@ var initializeLobby = function initializeLobby() {
       return false;
     }
     createRoom(nameText.value);
+    nameText.value = "";
     return false;
   });
 };
@@ -683,7 +684,7 @@ var joinRoom = function joinRoom(room) {
 
   updateGameState(LOADING_STATE);
 
-  document.querySelector('#host_start').style.display = 'none';
+  document.querySelector('#host_controls').style.display = 'none';
   socket.emit('join', { room: room });
 };
 
@@ -985,6 +986,10 @@ var deleteGame = function deleteGame() {
   };
 
   var bkeys = Object.keys(bullets);
+
+  while (playerOrder.length > 0) {
+    playerOrder.pop();
+  }
 
   for (var _i = 0; _i < bkeys.length; _i++) {
     delete bullets[bkeys[_i]];
