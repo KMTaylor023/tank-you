@@ -23,7 +23,6 @@ var gameSection = {};
 var lobbySection = {};
 var loadingSection = {};
 
-var errorMessage = {};
 var gameMessage = {};
 var leaveRoomButton = {};
 
@@ -153,10 +152,6 @@ const updateGameState = (state) => {
   }
 }
 
-const showError = (msg) => {
-  errorMessage.querySelector('#error_text').innerHTML = msg;
-  errorMessage.style.display = 'block';
-}
 
 // resets the current game state to waiting
 const resetGameState = () => {
@@ -194,14 +189,8 @@ const loadElements = () => {
   gameSection = document.querySelector('#game')
   loadingSection = document.querySelector('#loading');
   lobbySection = document.querySelector('#lobby');
-  errorMessage = document.querySelector('#error');
   gameMessage = document.querySelector('#game_msg');
   
-  errorMessage.querySelector('#error_button').addEventListener('click', (e) => {
-    e.preventDefault();
-    errorMessage.style.display = "none";
-    return false;
-  });
 }
 
 // sets up initial app state

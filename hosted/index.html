@@ -7,10 +7,6 @@
     <script src="bundle.js"></script>
   </head>
   <body>
-    <div id="error">
-      <h3 id="error_text">Error</h3>
-      <button id="error_button">OK</button>
-    </div>
     <section id="lobby">
       <input type="text" id="room_name_input" placeholder="Enter Room Name...">
       <button type="button" id="create_room_button">Create Room</button>
@@ -18,12 +14,16 @@
       </ul>
     </section>
     <section id="game">
-      <h2 id="game_msg">Waiting</h2>
+      <div id="message_div">
+        <h2 id="game_msg">Waiting</h2>
+      </div>
       <div id="host_controls">
         <button id="host_start">Start Game</button>
       </div>
       <canvas></canvas>
-      <button type="button" id="leave_room_button">Leave Room</button>
+      <div id="player_controls">
+        <button type="button" id="leave_room_button">Leave Room</button>
+      </div>
     </section>
     <section id="loading">
       <h1 id="loading_text">LOADING</h1>

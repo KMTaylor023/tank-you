@@ -25,7 +25,6 @@ var gameSection = {};
 var lobbySection = {};
 var loadingSection = {};
 
-var errorMessage = {};
 var gameMessage = {};
 var leaveRoomButton = {};
 
@@ -150,11 +149,6 @@ var updateGameState = function updateGameState(state) {
   }
 };
 
-var showError = function showError(msg) {
-  errorMessage.querySelector('#error_text').innerHTML = msg;
-  errorMessage.style.display = 'block';
-};
-
 // resets the current game state to waiting
 var resetGameState = function resetGameState() {
   updateGameState(WAITING_STATE);
@@ -189,14 +183,7 @@ var loadElements = function loadElements() {
   gameSection = document.querySelector('#game');
   loadingSection = document.querySelector('#loading');
   lobbySection = document.querySelector('#lobby');
-  errorMessage = document.querySelector('#error');
   gameMessage = document.querySelector('#game_msg');
-
-  errorMessage.querySelector('#error_button').addEventListener('click', function (e) {
-    e.preventDefault();
-    errorMessage.style.display = "none";
-    return false;
-  });
 };
 
 // sets up initial app state
@@ -821,7 +808,7 @@ var onErr = function onErr(sock) {
 
   socket.on('err', function (data) {
     exitGame();
-    if (data && data.msg) showError(data.msg);
+    if (data && data.msg) alert(data.msg);
   });
 };
 
@@ -846,7 +833,7 @@ var onHostLeft = function onHostLeft(sock) {
 
   socket.on('hostLeft', function () {
     exitGame();
-    showError('host left');
+    alert('host left');
   });
 };
 

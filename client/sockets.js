@@ -145,7 +145,7 @@ const onErr = (sock) => {
   
   socket.on('err', (data) => {
     exitGame();
-    if(data && data.msg) showError(data.msg);
+    if(data && data.msg) alert(data.msg);
   });
 };
 
@@ -170,7 +170,7 @@ const onHostLeft = (sock) => {
   
   socket.on('hostLeft', () => {
     exitGame();
-    showError('host left');
+    alert('host left');
   });
 };
 
