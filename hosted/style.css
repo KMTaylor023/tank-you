@@ -4,23 +4,19 @@
   font-family: 'Open Sans', sans-serif;
 }
 
+#error,
 #game,
-#lobby,
-#again{
+#loading
+#host_controls,
+#game_over_msg,
+#leave_room_button{
   display: none;
 }
 
-header {
-  display: block;
-  position: relative;
-  text-align: center;
-  margin: 10px auto;
-  font-family: "Orbitron", sans-serif;
-}
 
-#gameCanvas {
+canvas {
   width: 100%;
-  max-width: 510px;
+  max-width: 500px;
   margin: 0 auto;
   position: relative;
   display: block;
@@ -36,13 +32,23 @@ header {
   text-align: center;
 }
 
-.full {
+.room_full {
+  pointer-events: none;
+  cursor: default;
+  background-color: dimgray;
+}
+.room_started {
+  pointer-events: none;
+  cursor: default;
+  background-color: dimgray;
+}
+.room_over {
   pointer-events: none;
   cursor: default;
   background-color: dimgray;
 }
 
-.open {
+.room_open {
   cursor: pointer;
 }
 

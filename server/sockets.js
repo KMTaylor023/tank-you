@@ -37,9 +37,12 @@ const enterLobby = (sock) => {
 };
 
 const updateLobby = (room) => {
-  io.to('lobby').emit('updateLobby', { room });
+  let rdata = {};
+  rdata[room.roomName] = room;
+  io.to('lobby').emit('updateLobby', rdata);
+  
   if (room.players.length === 0) {
-    delete rooms[room];
+    delete rooms[room.roomName];
   }
 };
 
@@ -64,6 +67,7 @@ const joinRoom = (sock, roomName) => {
   }
 
   const room = rooms[roomName];
+  
 
   socket.join(roomName);
   socket.roomString = roomName;
@@ -71,46 +75,42 @@ const joinRoom = (sock, roomName) => {
   const tank = new Tank(socket.hash);
 
   if (room.players.length === 0) {
-    hostRelay.confirmHost(socket, room, updateLobby);
+    hostRelay.confirmHost(socket, room, tank, updateLobby);
   } else {
-    socket.hostSocket = room.hostSocket;
-    room.hostSocket.emit('playerJoined', tank);
+    socket.hostSocket = players[room.hostSocket];
+    socket.hostSocket.emit('addPlayer', tank);
   }
 
 
   room.players.push(socket.hash);
-  
-  if(room.players.length === MAX_ROOM_SIZE){
+
+  if (room.players.length === MAX_ROOM_SIZE) {
     room.full = true;
   }
-  
-  return updateLobby(roomName);
+
+  return updateLobby(room);
 };
 
 
 const leaveRoom = (sock) => {
   const socket = sock;
-
   if (!socket.roomString) {
     return;
   }
 
   const s = socket.roomString;
-
   if (rooms[s]) {
     const room = rooms[s];
-
     room.players.splice(room.players.indexOf(socket.hash));
     room.full = false;
 
     socket.broadcast.to(socket.roomString).emit('left', { hash: socket.hash });
-
-    // TODO swap to a new host?
-    if (room.players.length !== 0 && socket.host) {
-      socket.broadcast.to(socket.roomString).emit('host_left', {});
+    if (socket.host) {
+      socket.broadcast.to(socket.roomString).emit('hostLeft', {});
       room.players = [];
     }
-    updateLobby(s);
+    
+    updateLobby(room);
   }
 
   socket.leave(socket.roomString);
@@ -141,7 +141,9 @@ const onCreateRoom = (sock) => {
       return;
     }
 
-    rooms[room] = { players: [], running: false, over: false, full:false};
+    rooms[room] = {
+      players: [], running: false, over: false, full: false, roomName: room,
+    };
 
     joinRoom(socket, room);
   });
@@ -221,6 +223,7 @@ const setup = (server) => {
 
     const hash = doHash(socket.id);
     socket.hash = hash;
+    socket.emit('getHash', {hash});
 
     players[socket.hash] = socket;
 

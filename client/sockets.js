@@ -7,7 +7,17 @@ const joinRoom = (room) => {
   
   updateGameState(LOADING_STATE);
   
-  socket.emit('join', room);
+  document.querySelector('#host_start').style.display = 'none';
+  socket.emit('join', {room});
+};
+
+const leaveRoom = () => {
+  socket.emit('leave', {});
+}
+
+const createRoom = (room) => {
+  socket.emit('createRoom',{room});
+  updateGameState(LOADING_STATE);
 }
 
 const sendShot = (bullet) => {
@@ -16,9 +26,13 @@ const sendShot = (bullet) => {
   if(isHost) {
     addBullet(bullet);
   } else {
-    socket.emit('shoot', {player: players[player_hash], bullet});
+    socket.emit('shoot', bullet);
   }
 };
+
+const clientMove = (player) => {
+  socket.emit('move', player);
+}
 
 /*
 ----------------------------------------- Client Socket emission
@@ -31,30 +45,27 @@ const onMove = (sock) => {
   const socket = sock;
   
   socket.on('updatedMovement', (data) => {
-    
+    updatePlayer_update(data);
   });
 };
 
 const onShot = (sock) => {
   const socket = sock;
   
-  socket.on('updateShot' = (data) => {
-    if(data.hash === player_hash){
-      players[player_hash].shot = true;
-    }
-    updateBullet(data);
-  })
+  socket.on('updateBullets', (data) => {
+    updateBullets_update(data);
+  });
 };
 
-onShotRemoved = (sock) => {
+const onRemoveBullet = (sock) => {
   const socket = sock;
   
-  socket.on('shotRemoved', (data) => {
+  socket.on('removeBullet', (data) => {
     if(data.hash === player_hash){
       players[player_hash].shot = false;
     }
     removeBullet(data);
-  })
+  });
 }
 
 const onHit = (sock) => {
@@ -69,15 +80,23 @@ const onPlayerJoined = (sock) => {
   const socket = sock;
   
   socket.on('playerJoined', (data) => {
-    addPlayers(data);
+    addPlayers_update(data);
   });
 };
+
+const onUpdateBullets = (sock) => {
+  const socket = sock;
+  
+  socket.on('updateBullets', (data) => {
+    updateBullets_update(data);
+  });
+}
 
 const onReset = (sock) => {
   const socket = sock;
   
-  socket.on('resetGame', () => {
-    resetGame();
+  socket.on('resetGame', (data) => {
+    resetGame(data);
   });
 };
 
@@ -97,21 +116,84 @@ const onLobby = (sock) => {
   const socket = sock;
   
   socket.on('updateLobby', (data) => {
-    manageLobby(data, sock);
+    manageLobby(data);
   });
 };
 
+const onLeft = (sock) => {
+  const socket = sock;
+  
+  socket.on('left', (data) => {
+    removeUser(data.hash);
+  });
+}
+
+const onHost = (sock) => {
+  const socket = sock;
+  
+  socket.on('hostOn', (data) => {
+    setHostListen(true,data);
+  });
+  
+  socket.on('hostOff', () => {
+    setHostListen(false);
+  });
+};
 
 const onErr = (sock) => {
   const socket = sock;
   
   socket.on('err', (data) => {
-    deleteGame();
-    enterLobby();
-    if(data && data.msg) showErr(data.msg);
-  })
+    exitGame();
+    if(data && data.msg) showError(data.msg);
+  });
+};
+
+const onGetHash = (sock) => {
+  const socket = sock;
+  
+  socket.on('getHash', (data) => {
+    player_hash = data.hash;
+  });
+};
+
+const onStartGame = (sock) => {
+  const socket = sock;
+  
+  socket.on('startGame', () => {
+    startGame();
+  });
 }
+
+const onHostLeft = (sock) => {
+  const socket = sock;
+  
+  socket.on('hostLeft', () => {
+    exitGame();
+    showError('host left');
+  });
+};
 
 /*
 ----------------------------------------- Client Socket reception
 */
+
+const setupSocket = () => {
+  socket.on('connect', () => {
+    onHostLeft(socket);
+    onGetHash(socket);
+    onLeft(socket);
+    onStartGame(socket);
+    onMove(socket);
+    onShot(socket);
+    onRemoveBullet(socket);
+    onReset(socket);
+    onHit(socket);
+    onPlayerJoined(socket);
+    onGameOver(socket);
+    onLobby(socket);
+    onErr(socket);
+    onHost(socket);
+  });
+}
+

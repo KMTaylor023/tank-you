@@ -32,3 +32,5 @@ const server = http.createServer(onRequest).listen(port);
 const io = socketio(server);
 
 socketeHandler.setup(io);
+
+console.log(`Listening for traffic on port ${port}`);

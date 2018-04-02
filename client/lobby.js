@@ -16,7 +16,38 @@ var noRoomsNotification = {};
 
 const initializeLobby = () => {
   lobbyList = document.querySelector("#lobby_list");
-  noRoomsNotification = document.querySelector('#no_rooms')
+  noRoomsNotification = document.querySelector('#no_rooms');
+  
+  const nameText = document.querySelector('#room_name_input');
+  document.querySelector('#create_room_button').addEventListener('click', (e) => {
+    e.preventDefault(true);
+    if (nameText.value === '') {
+      return false;
+    }
+    createRoom(nameText.value);
+    return false;
+  });
+  
+};
+
+const initRoom = (name) => {
+  const li = document.createElement('li');
+  
+  const namep = document.createElement('p');
+  namep.classList.add("room_name");
+  
+  const countp = document.createElement('p');
+  countp.classList.add("room_count");
+  
+  const statusp = document.createElement('p');
+  statusp.classList.add("room_status");
+  
+  li.appendChild(namep);
+  li.appendChild(countp);
+  li.appendChild(statusp);
+  roomClick(li);
+  
+  return li;
 };
 
 const roomClick = (roomli) => {
@@ -24,37 +55,20 @@ const roomClick = (roomli) => {
   
   li.addEventListener('click', (e) => {
     e.preventDefault();
-    
     if(gameState !== LOBBY_STATE){
       return false;
     }else if(!li.classList.contains(roomStatus[OPEN][1])){
       return false;
     }
-    
-    const room = li.getAttribute('room');
-    
+    const room = li.querySelector('.room_name').innerHTML;
     joinRoom(room);
     return false;
   });
 }
 
-const createRoom = (name) => {
-  let li = document.createElement('li');
-  let namep = document.createElement('p').classList.append("room_name");
-  let countp = document.createElement('p').classList.append("room_count");
-  let statusp = document.createElement('p').classList.append("room_status");
-  li.append(nameP);
-  li.append(countp);
-  li.append(statusp);
-  
-  roomClick(li);
-  
-  return li;
-};
 
 const setupRoom = (roomli, name, count, status) => {
   const li = roomli;
-  
   li.querySelector('.room_name').innerHTML = name;
   li.querySelector('.room_count').innerHTML = `Players: ${count}`;
   li.querySelector('.room_status').innerHTML = roomStatus[status][0];
@@ -62,13 +76,13 @@ const setupRoom = (roomli, name, count, status) => {
   for(let i = 0; i < roomStatus.length; i++){
     li.classList.remove(roomStatus[i][1]);
   }
-  li.classList.append(roomStatus[status][1]);
+  li.classList.add(roomStatus[status][1]);
   li.id = `lobby_room_${name}`;
 };
 
-const manageLobby = (data, sock) => {
-  const keys = Object.keys(rooms);
-
+const manageLobby = (data) => {
+  const keys = Object.keys(data);
+  
   if (keys.length === 0) {
     return;
   }
@@ -78,25 +92,24 @@ const manageLobby = (data, sock) => {
   for(let i = 0; i < keys.length; i++){
     const key = keys[i];
     const room = data[key];
-    
     if(room.players.length > 0){
     
       let existed = true;
       if(gamelist[key]){
         li = lobbyList.querySelector(`#lobby_room_${key}`);
         if(li == null){
-          li = createRoom(gamelist[keys[i]]);
+          li = initRoom(gamelist[keys[i]]);
           existed = false
         }
       }
       else{
-        li = createRoom(gamelist[keys[i]]);
+        li = initRoom(gamelist[keys[i]]);
         existed = false;
       }
       
       gamelist[key] = room;
       
-      let staus = OPEN;
+      let status = OPEN;
       
       if(room.full){
         status = FULL;
@@ -112,14 +125,15 @@ const manageLobby = (data, sock) => {
       if(!existed) lobbyList.appendChild(li);
     }
     else{
-      lobbyList.removeChild(lobbyList.querySelector(`lobby_room_${key}`));
+      const offender = lobbyList.querySelector(`#lobby_room_${key}`);
+      if(offender) lobbyList.removeChild(offender);
       delete gamelist[key];
     }
   }
   
-  gamelist.style.display = 'block';
+  lobbyList.style.display = 'block';
   
   if(Object.keys(gamelist).length === 0){
-    gamelist.style.display = 'none';
+    lobbyList.style.display = 'none';
   }
 };

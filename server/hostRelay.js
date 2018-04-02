@@ -1,12 +1,12 @@
-const confirmHost = (sock, rm, update) => {
+const confirmHost = (sock, rm, tank, update) => {
   const room = rm;
   const socket = sock;
 
   socket.host = true;
   socket.hostSocket = socket;
-  room.hostSocket = socket;
+  room.hostSocket = socket.hash;
 
-  //TODO add last update to all?????//////////////////////////////////////////////
+  // TODO add last update to all?????//////////////////////////////////////////////
   socket.on('hostMove', (data) => {
     socket.broadcast.to(socket.roomString).emit('updatedMovement', data);
   });
@@ -14,10 +14,14 @@ const confirmHost = (sock, rm, update) => {
   socket.on('hostHit', (data) => {
     socket.broadcast.to(socket.roomString).emit('hit', data);
   });
+
+  socket.on('hostShots', (data) => {
+    socket.broadcast.to(socket.roomString).emit('updateBullets', data);
+  });
   
-  socket.on('hostShot', (data) => {
-    socket.broadcast.to(socket.roomString).emit('updateBullet', data);
-  }
+  socket.on('removeBullet', (data) => {
+    socket.broadcast.to(socket.roomString).emit('removeBullet', data);
+  });
 
   // a new player joined. Update everyone on current players
   // include hash of new player
@@ -28,31 +32,31 @@ const confirmHost = (sock, rm, update) => {
   socket.on('gameStart', () => {
     room.started = true;
     update(room);
-    
+
     socket.broadcast.to(socket.roomString).emit('startGame', {});
   });
 
   socket.on('gameOver', (data) => {
-    if(!data || !data.winner) return;
-    
+    if (!data || !data.winner) return;
+
     room.started = false;
     room.over = true;
-    
+
     update(room);
-    
-    socket.broadcast.to(socket.roomString).emit('gameOver', {winner: data.winner});
+
+    socket.broadcast.to(socket.roomString).emit('gameOver', data);
   });
-  
+
   socket.on('resetGame', () => {
-    if(!room.over) return;
+    if (!room.over) return;
     room.over = false;
-    
+
     update(room);
-    
+
     socket.broadcast.to(socket.roomString).emit('resetGame', {});
   });
 
-  socket.emit('host_on');
+  socket.emit('hostOn', tank);
 };
 
 
@@ -62,13 +66,7 @@ const removeHost = (sock) => {
   socket.host = false;
   delete socket.hostSocket;
 
-  socket.off('hostMove');
-  socket.off('hostHit');
-  socket.off('gameStart');
-  socket.off('playerJoin');
-  socket.off('gameOver');
-
-  socket.emit('host_off');
+  socket.emit('hostOff');
 };
 
 module.exports.confirmHost = confirmHost;

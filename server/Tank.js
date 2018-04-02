@@ -1,9 +1,9 @@
 class Tank {
-  constructor(hash, maxShots) {
+  constructor(hash) {
     this.hash = hash;
     this.lastUpdate = new Date().getTime();
-    
-    //The tank has a circular hit box
+
+    // The tank has a circular hit box
     this.x = 0;
     this.y = 0;
     this.prevX = 0;
@@ -11,13 +11,13 @@ class Tank {
     this.destX = 0;
     this.destY = 0;
     this.radius = 50;
-    
-    //Tank Specific things
+
+    // Tank Specific things
     this.alive = true;
     this.gunAngle = 0;
     this.shot = false;
-    
-    //animation variables
+
+    // animation variables
     this.alpha = 0;
     this.direction = 0;
     this.frame = 0;

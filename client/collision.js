@@ -17,34 +17,34 @@ const bulletOutBounds = (bullet) => {
 }
 
 
-const checkBullets = () => {
-  if (bullets.length > 0) {
-    let pkeys = Object.keys(players);
-    let bkeys = Object.keys(bullets);
-    
-    for(let b = 0; b < bkeys.length; b++) {
-      let destroyBullet = false;
-      const bkey = bkeys[b];
-      const bullet = bullets[bkey];
-      for(let p = 0; p < pkeys.length && !destroyBullet; p++){
-        const pkey = pkeys[p];
-        const player = players[pkey];
+const checkBullets_collision = () => {
+  let pkeys = Object.keys(players);
+  let bkeys = Object.keys(bullets);
+  
+  for(let b = 0; b < bkeys.length; b++) {
+    let destroyBullet = false;
+    const bkey = bkeys[b];
+    const bullet = bullets[bkey];
+    for(let p = 0; p < pkeys.length && !destroyBullet; p++){
+      const pkey = pkeys[p];
+      const player = players[pkey];
+      
+      if(player.hash !== bullet.hash && player.alive){
+        const hit = checkCollisions(player, bullet);
         
-        if(player.hash !== bullet.hash && player.alive){
-          const hit = checkCollisions(player, bullet);
+        if(hit){
+          doHit(player);
+          hostRemoveBullet(bullet);
+          destroyBullet = true;
+          player.alive = false;
           
-          if(hit){
-            doHit(player);
-            removeBullet(bullet);
-            destroyBullet = true;
-            player.alive = false;
-          }
+          checkGameOver_update();
         }
       }
-      
-      if(!destroyBullet && bulletOutBounds(bullet)){
-        removeBullet(bullet);
-      }
+    }
+    
+    if(!destroyBullet && bulletOutBounds(bullet)){
+      hostRemoveBullet(bullet);
     }
   }
 };

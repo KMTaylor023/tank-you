@@ -4,12 +4,6 @@ var player_hash = 0;
 
 var socket = {};
 
-var canvas;
-var ctx;
-
-const CANVAS_WIDTH = 500;
-const CANVAS_HEIGHT = 500;
-
 const LEFT = 0;
 const UP = 1;
 const RIGHT = 2;
@@ -30,25 +24,28 @@ var lobbySection = {};
 var loadingSection = {};
 
 var errorMessage = {};
+var gameMessage = {};
+var leaveRoomButton = {};
 
 var mousePositionTimer = {};
 
 
 // +++++++ the handler functions
 const keyDownHandler = (e) => {
-  if(gameState !== RUNNING_STATE) return;
+  if(gameState !== RUNNING_STATE || !players[player_hash].alive) return;
   const keyPressed = e.which;
+  const player = players[player_hash];
   if (keyPressed === 87 || keyPressed === 38) {
-    move[UP] = true;
+    player.moveUp = true;
   }
   if (keyPressed === 65 || keyPressed === 37) {
-    move[LEFT] = true;
+    player.moveLeft = true;
   }
   if (keyPressed === 83 || keyPressed === 40) {
-    move[DOWN] = true;
+    player.moveDown = true;
   } 
   if (keyPressed === 68 || keyPressed === 39) {
-    move[RIGHT] = true;
+    player.moveRight = true;
   }
   if (move[UP] || move[LEFT] || move[DOWN] || move[RIGHT]) {
     e.preventDefault(true);
@@ -56,19 +53,20 @@ const keyDownHandler = (e) => {
 };
 
 const keyUpHandler = (e) => {
-  if(gameState !== RUNNING_STATE) return;
+  if(gameState !== RUNNING_STATE || !players[player_hash].alive) return;
   const keyPressed = e.which;
+  const player = players[player_hash];
   if (keyPressed === 87 || keyPressed === 38) {
-    move[UP] = false;
+    player.moveUp = false;
   } 
   if (keyPressed === 65 || keyPressed === 37) {
-    move[LEFT] = false;
+    player.moveLeft = false;
   } 
   if (keyPressed === 83 || keyPressed === 40) {
-    move[DOWN] = false;
+    player.moveDown = false;
   } 
   if (keyPressed === 68 || keyPressed === 39) {
-    move[RIGHT] = false;
+    player.moveRight = false;
   }
 };
 
@@ -85,18 +83,22 @@ const calculateMouseAngle = (e) => {
 }
 //TODO is this too much math too often? slow down sample rate??
 const mouseMoveHandler = (e) => {
-  if(gameState !== RUNNING_STATE) return;
-  
+  if(gameState !== RUNNING_STATE || !players[player_hash].alive) return;
   calculateMouseAngle(e);
 };
 
 const mouseClickHandler = (e) => {
   if(gameState !== RUNNING_STATE || players[player_hash].shot) return;
-  
+  const player = players[player_hash];
+  if(!player.alive) return;
   calculateMouseAngle(e);
   
-  const px = players[player_hash].x;
-  const py = players[player_hash].y;
+  const angle = player.gunAngle;
+  const xper = Math.cos(angle);
+  const yper = Math.sin(angle);
+  const px = player.x + (xper*player.radius);
+  const py = player.y + (yper*player.radius);
+  
   const bullet = {
     hash: player_hash,
     x: px,
@@ -104,36 +106,50 @@ const mouseClickHandler = (e) => {
     prevX: px,
     prevY: py,
     destX: px,
+    alpha: 0.05,
     destY: py,
-    angle: players[player_hash].gunAngle,
+    xpercent: xper,
+    ypercent: yper,
   }
   sendShot(bullet);
-  
-}
+};
 
 
 // -------
+
+const setViewHostControl = (hosting) => {
+  let view = 'block';
+  if(!hosting) view = 'none';
+  
+  document.querySelector('#host_controls').style.display = view;
+};
 
 const updateGameState = (state) => {
   if(state < 0 || state > 4) return;
   
   gameState = state;
   
-  if(state === LOADING_STATE){
+  if(state === LOBBY_STATE){
     gameSection.style.display = 'none';
     loadingSection.style.display = 'none';
     
     lobbySection.style.display = 'block';
+    stopDraw();
   } else if (state === LOADING_STATE){
     gameSection.style.display = 'none';
     lobbySection.style.display = 'none';
     
     loadingSection.style.display = 'block';
+    stopDraw();
   } else {
+    if(gameState === WAITING_STATE) gameMessage.innerHTML = 'Waiting for Players';
+    else if (gamesState == RUNNING_STATE) gameMessage.innerHTML = "Game On!";
+    
     lobbySection.style.display = 'none';
     loadingSection.style.display = 'none';
     
     gameSection.style.display = 'block';
+    startDraw();
   }
 }
 
@@ -143,36 +159,35 @@ const showError = (msg) => {
 }
 
 // resets the current game state to waiting
-const resetGame = () => {
+const resetGameState = () => {
   updateGameState(WAITING_STATE);
 };
 
 const startGame = () => {
-  
+  updateGameState(RUNNING_STATE);
 };
 
 //moves the game ot the end state
 const endGame = (winner) => {
-  if(!players[winner]){
-    return;
-  }
-
-  //TODO winner
-};
-
-const deleteGame = () => {
+  if(winner === player_hash) gameMessage.innerHTML = 'You WIN! :D';
+  else gameMessage.innerHTML = 'You LOSE! :p';
   
-};
-
-// exists the game, removes all game state vars
-const exitGame = () => {
+  leaveRoomButton.style.display = 'inline';
   
-  deleteGame();
+  updateGameState(GAMEOVER_STATE);
 };
 
 const enterLobby = () => {
   updateGameState(LOBBY_STATE);
-}
+};
+
+// exists the game, removes all game state vars
+const exitGame = () => {
+  deleteGame();
+  leaveRoom();
+  leaveRoomButton.style.display = 'none';
+  enterLobby();
+};
 
 
 const loadElements = () => {
@@ -180,6 +195,7 @@ const loadElements = () => {
   loadingSection = document.querySelector('#loading');
   lobbySection = document.querySelector('#lobby');
   errorMessage = document.querySelector('#error');
+  gameMessage = document.querySelector('#game_msg');
   
   errorMessage.querySelector('#error_button').addEventListener('click', (e) => {
     e.preventDefault();
@@ -193,23 +209,32 @@ const init = () => {
   loadElements();//load constantly reference elements
   initializeLobby();//initialize lobby elements
   
-  const canvas = document.querySelector('canvas');
-  canvas.width = CANVAS_WIDTH;
-  canvas.height = CANVAS_HEIGHT;
-  canvas.style.border = '1px solid blue';
+  initializeCanvas();
   
 
   socket = io.connect();
 
-  socket.on('connect', () => {
-    onJoin(socket);
-    onMove(socket);
-    onLeft(socket);
+  setupSocket(socket);
+  
+  initializeHostControls();
+  
+  leaveRoomButton = document.querySelector('#leave_room_button');
+  
+  leaveRoomButton.addEventListener('click', (e) => {
+    e.preventDefault();
+    
+    if(gameState !== GAMEOVER_STATE) return false;
+    
+    exitGame();
+    return false;
   });
 
 
   document.body.addEventListener('keydown', keyDownHandler);
   document.body.addEventListener('keyup', keyUpHandler);
+  
+  canvas.addEventListener('mousemove', mouseMoveHandler);
+  canvas.addEventListener('click', mouseClickHandler);
   
   enterLobby();
 };
